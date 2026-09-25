@@ -108,6 +108,49 @@ fn force_exit(cx: &mut compositor::Context, args: Args, event: PromptEvent) -> a
     quit(cx, Args::default(), event)
 }
 
+fn assist(cx: &mut compositor::Context, _args: Args, event: PromptEvent) -> anyhow::Result<()> {
+    if event != PromptEvent::Validate {
+        return Ok(());
+    }
+    // Deferred: opening the panel needs the compositor, which a typable command does
+    // not get.
+    let _ = cx;
+    crate::job::dispatch_blocking(|editor, compositor| {
+        crate::assist::open_or_prompt(editor, compositor);
+    });
+    Ok(())
+}
+
+fn assist_yank(
+    cx: &mut compositor::Context,
+    _args: Args,
+    event: PromptEvent,
+) -> anyhow::Result<()> {
+    if event != PromptEvent::Validate {
+        return Ok(());
+    }
+    let _ = cx;
+    crate::job::dispatch_blocking(|editor, compositor| {
+        crate::assist::yank_transcript(editor, compositor);
+    });
+    Ok(())
+}
+
+fn assist_cancel(
+    cx: &mut compositor::Context,
+    _args: Args,
+    event: PromptEvent,
+) -> anyhow::Result<()> {
+    if event != PromptEvent::Validate {
+        return Ok(());
+    }
+    let _ = cx;
+    crate::job::dispatch_blocking(|editor, compositor| {
+        crate::assist::cancel(editor, compositor);
+    });
+    Ok(())
+}
+
 fn quit(cx: &mut compositor::Context, _args: Args, event: PromptEvent) -> anyhow::Result<()> {
     log::debug!("quitting...");
 
@@ -3004,6 +3047,39 @@ const WRITE_NO_CODE_ACTIONS_FLAG: Flag = Flag {
 };
 
 pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
+    TypableCommand {
+        name: "assist",
+        aliases: &[],
+        doc: "Open the assist panel and prompt the configured agent.",
+        fun: assist,
+        completer: CommandCompleter::none(),
+        signature: Signature {
+            positionals: (0, Some(0)),
+            ..Signature::DEFAULT
+        },
+    },
+    TypableCommand {
+        name: "assist-yank",
+        aliases: &[],
+        doc: "Copy the assist transcript into a scratch buffer, where search and yank work.",
+        fun: assist_yank,
+        completer: CommandCompleter::none(),
+        signature: Signature {
+            positionals: (0, Some(0)),
+            ..Signature::DEFAULT
+        },
+    },
+    TypableCommand {
+        name: "assist-cancel",
+        aliases: &[],
+        doc: "Ask the assist agent to abandon the current turn.",
+        fun: assist_cancel,
+        completer: CommandCompleter::none(),
+        signature: Signature {
+            positionals: (0, Some(0)),
+            ..Signature::DEFAULT
+        },
+    },
     TypableCommand {
         name: "exit",
         aliases: &["x", "xit"],

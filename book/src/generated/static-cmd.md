@@ -313,3 +313,4 @@
 | `goto_prev_tabstop` | Goto next snippet placeholder |  |
 | `rotate_selections_first` | Make the first selection your primary one |  |
 | `rotate_selections_last` | Make the last selection your primary one |  |
+| `assist_open` | Open the assist panel | normal: `` <space>A ``, select: `` <space>A `` |

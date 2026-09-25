@@ -3,6 +3,7 @@ extern crate helix_view;
 
 pub mod application;
 pub mod args;
+pub mod assist;
 pub mod commands;
 pub mod compositor;
 pub mod config;

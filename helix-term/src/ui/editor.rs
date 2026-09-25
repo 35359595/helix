@@ -41,6 +41,10 @@ pub struct EditorView {
     pseudo_pending: Vec<KeyEvent>,
     pub(crate) last_insert: (commands::MappableCommand, Vec<InsertEvent>),
     pub(crate) completion: Option<Completion>,
+    /// Live assist session, if the panel is open.
+    pub(crate) assist: Option<crate::assist::AssistSession>,
+    /// Where the assist panel was last drawn, for routing scroll events to it.
+    assist_area: Option<Rect>,
     spinners: ProgressSpinners,
     /// Tracks if the terminal window is focused by reaction to terminal focus events
     terminal_focused: bool,
@@ -65,6 +69,8 @@ impl EditorView {
             pseudo_pending: Vec::new(),
             last_insert: (commands::MappableCommand::normal_mode, Vec::new()),
             completion: None,
+            assist: None,
+            assist_area: None,
             spinners: ProgressSpinners::default(),
             terminal_focused: true,
         }
@@ -1208,6 +1214,27 @@ impl EditorView {
             self.handle_non_key_input(cxt)
         }
 
+        // Wheel over the assist panel scrolls the transcript, not the buffer under it.
+        if let Some(area) = self.assist_area {
+            let over_panel = event.column >= area.x
+                && event.column < area.right()
+                && event.row >= area.y
+                && event.row < area.bottom();
+            if over_panel {
+                let lines = match event.kind {
+                    MouseEventKind::ScrollUp => 3,
+                    MouseEventKind::ScrollDown => -3,
+                    _ => 0,
+                };
+                if lines != 0 {
+                    if let Some(session) = self.assist.as_mut() {
+                        session.scroll(lines);
+                    }
+                    return EventResult::Consumed(None);
+                }
+            }
+        }
+
         let config = cxt.editor.config();
         let MouseEvent {
             kind,
@@ -1634,6 +1661,17 @@ impl Component for EditorView {
             editor_area = editor_area.clip_top(1);
         }
 
+        // Carve the assist panel off the right *before* the resize, so the view tree
+        // lays out in what is left instead of being drawn over.
+        let assist_area = self
+            .assist
+            .as_ref()
+            .and_then(|_| crate::assist::panel_area(editor_area, config.assist.width));
+        if let Some(panel) = assist_area {
+            editor_area = editor_area.clip_right(panel.width);
+        }
+        self.assist_area = assist_area;
+
         // if the terminal size suddenly changed, we need to trigger a resize
         cx.editor.resize(editor_area);
 
@@ -1644,6 +1682,10 @@ impl Component for EditorView {
         for (view, is_focused) in cx.editor.tree.views() {
             let doc = cx.editor.document(view.doc).unwrap();
             self.render_view(cx.editor, doc, view, area, surface, is_focused);
+        }
+
+        if let (Some(panel), Some(session)) = (assist_area, self.assist.as_mut()) {
+            session.render_panel(panel, surface, cx);
         }
 
         if config.auto_info {

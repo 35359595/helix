@@ -12,7 +12,7 @@ pub mod prompt;
 mod select;
 mod spinner;
 mod statusline;
-mod text;
+pub(crate) mod text;
 mod text_decorations;
 
 use crate::compositor::Compositor;

@@ -40,6 +40,13 @@ git = ["helix-vcs/git"]
 name = "hx"
 path = "src/main.rs"
 
+# Deterministic ACP agent for the assist integration tests. Gated so a normal build
+# never produces it; the tests locate it through CARGO_BIN_EXE_hx-mock-acp-agent.
+[[bin]]
+name = "hx-mock-acp-agent"
+path = "tests/fixtures/mock_agent.rs"
+required-features = ["integration"]
+
 [dependencies]
 helix-stdx = { path = "../helix-stdx" }
 helix-core = { path = "../helix-core" }
@@ -59,6 +66,8 @@ termina = { workspace = true, features = ["event-stream"] }
 signal-hook = "0.4"
 tokio-stream = "0.1"
 futures-util = { version = "0.3", features = ["std", "async-await"], default-features = false }
+# Agent Client Protocol client for the assist panel
+agent-client-protocol = "2.2"
 arc-swap.workspace = true
 termini = "1"
 indexmap = { version = "2.14", features = ["serde"] }

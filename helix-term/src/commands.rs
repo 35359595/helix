@@ -616,6 +616,7 @@ impl MappableCommand {
         goto_prev_tabstop, "Goto next snippet placeholder",
         rotate_selections_first, "Make the first selection your primary one",
         rotate_selections_last, "Make the last selection your primary one",
+        assist_open, "Open the assist panel",
     );
 }
 
@@ -7225,4 +7226,13 @@ fn lsp_or_syntax_workspace_symbol_picker(cx: &mut Context) {
     } else {
         syntax_workspace_symbol_picker(cx);
     }
+}
+
+/// Open the assist panel and prompt the configured agent.
+fn assist_open(cx: &mut Context) {
+    cx.callback.push(Box::new(
+        move |compositor: &mut Compositor, cx: &mut compositor::Context| {
+            crate::assist::open_or_prompt(cx.editor, compositor);
+        },
+    ));
 }

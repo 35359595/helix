@@ -4,6 +4,7 @@
 - [`[editor.clipboard-provider]` Section](#editorclipboard-provider-section)
 - [`[editor.statusline]` Section](#editorstatusline-section)
 - [`[editor.lsp]` Section](#editorlsp-section)
+- [`[editor.assist]` Section](#editorassist-section)
 - [`[editor.cursor-shape]` Section](#editorcursor-shape-section)
 - [`[editor.file-picker]` Section](#editorfile-picker-section)
 - [`[editor.file-explorer]` Section](#editorfile-explorer-section)
@@ -180,6 +181,42 @@ The following statusline elements can be configured:
 [^1]: By default, a progress spinner is shown in the statusline beside the file path.
 
 [^2]: You may also have to activate them in the language server config for them to appear, not just in Helix. Inlay hints in Helix are still being improved on and may be a little bit laggy/janky under some circumstances. Please report any bugs you see so we can fix them!
+
+### `[editor.assist]` Section
+
+Configures the assist panel, which talks to a coding agent over the
+[Agent Client Protocol](https://agentclientprotocol.com). The agent runs as a
+subprocess; any ACP-compatible agent works.
+
+| Key       | Description                                                     | Default |
+| ---       | -----------                                                     | ------- |
+| `enable`  | Enables the assist panel.                                       | `true`  |
+| `command` | Command used to launch the agent, for example `npx -y @agentclientprotocol/claude-agent-acp`. Leading `NAME=value` pairs are passed as environment variables. | Unset by default |
+| `width`   | Panel width in columns. Capped at half the window; the panel hides itself when the window is too narrow. | `48` |
+
+```toml
+[editor.assist]
+command = "npx -y @agentclientprotocol/claude-agent-acp"
+```
+
+Open the panel with `<space>A` or `:assist`. It docks to the right of the editor and
+displaces the buffers rather than covering them. The transcript is rendered markdown,
+so headings and fenced code are highlighted; scroll it with the mouse wheel. It is not
+a buffer, so `:assist-yank` copies it into a scratch buffer when you want to search or
+yank from it.
+
+When the agent proposes an edit, it is applied to the buffer and selected, and a bar
+asks what to do with it:
+
+| Key | Action |
+| --- | ------ |
+| `a` | Accept the edit. It becomes a single undo revision. |
+| `r` | Reject it. The buffer is restored and nothing enters undo history. |
+| `e` | Take over and correct the edit by hand. `<space>A` resumes the review. |
+
+Because the proposal sits in a real buffer, language server diagnostics run on it
+before it is accepted. `:assist-cancel` abandons the current turn; any unreviewed edit
+is taken back out.
 
 ### `[editor.cursor-shape]` Section
 

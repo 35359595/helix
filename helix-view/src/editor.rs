@@ -378,6 +378,8 @@ pub struct Config {
     #[serde(default)]
     pub search: SearchConfig,
     pub lsp: LspConfig,
+    /// Assist panel configuration.
+    pub assist: AssistConfig,
     pub terminal: Option<TerminalConfig>,
     /// Column numbers at which to draw the rulers. Defaults to `[]`, meaning no rulers.
     pub rulers: Vec<u16>,
@@ -615,6 +617,30 @@ pub fn get_terminal_provider() -> Option<TerminalConfig> {
     }
 
     None
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
+pub struct AssistConfig {
+    /// Enables the assist panel.
+    pub enable: bool,
+    /// Command used to launch the ACP agent, for example
+    /// `npx -y @agentclientprotocol/claude-agent-acp`. When unset, `:assist` reports
+    /// that no agent is configured.
+    pub command: Option<String>,
+    /// Width of the assist panel in columns. Capped at half the terminal width, and
+    /// the panel hides itself entirely when the window is too narrow to spare it.
+    pub width: u16,
+}
+
+impl Default for AssistConfig {
+    fn default() -> Self {
+        Self {
+            enable: true,
+            command: None,
+            width: 48,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1209,6 +1235,7 @@ impl Default for Config {
             undercurl: false,
             search: SearchConfig::default(),
             lsp: LspConfig::default(),
+            assist: AssistConfig::default(),
             terminal: get_terminal_provider(),
             rulers: Vec::new(),
             whitespace: WhitespaceConfig::default(),

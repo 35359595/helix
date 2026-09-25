@@ -1,5 +1,8 @@
 | Name | Description |
 | --- | --- |
+| `:assist` | Open the assist panel and prompt the configured agent. |
+| `:assist-yank` | Copy the assist transcript into a scratch buffer, where search and yank work. |
+| `:assist-cancel` | Ask the assist agent to abandon the current turn. |
 | `:exit`, `:x`, `:xit` | Write changes to disk if the buffer is modified and then quit. Accepts an optional path (:exit some/path.txt). |
 | `:exit!`, `:x!`, `:xit!` | Force write changes to disk, creating necessary subdirectories, if the buffer is modified and then quit. Accepts an optional path (:exit! some/path.txt). |
 | `:quit`, `:q` | Close the current view. |
